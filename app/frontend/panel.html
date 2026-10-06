@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Complejo Deportivo — Panel de Empleados</title>
-  <link rel="icon" type="image/jpeg" href="../../public/images/logo.png">
+  <title>Complejo Deportivo — Panel de gestión</title>
+  <link rel="icon" type="image/svg+xml" href="../../public/images/logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
+  <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 
 <body>
@@ -18,10 +19,10 @@
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">
-      <img src="../../public/images/logo.png" alt="Complejo Deportivo">
+      <img src="../../public/images/logo.svg" alt="Complejo Deportivo">
       <div class="login-logo-text">
         Complejo Deportivo
-        <small>Panel de empleados</small>
+        <small>Panel de gestión</small>
       </div>
     </div>
     <h1 class="login-title">Iniciar sesión</h1>
@@ -47,7 +48,7 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-top">
       <div class="sidebar-brand">
-        <img src="../../public/images/logo.png" alt="Complejo Deportivo">
+        <img src="../../public/images/logo.svg" alt="Complejo Deportivo">
         <div class="sidebar-brand-text">
           Complejo Deportivo
           <small>Panel de gestión</small>
@@ -142,6 +143,7 @@
           <button class="date-nav-btn" onclick="shiftDate(1)" title="Día siguiente"><i class="fas fa-chevron-right"></i></button>
           <button class="date-nav-btn" onclick="goToday()" title="Hoy" style="font-size:12px;font-weight:800;">HOY</button>
         </div>
+        <button class="btn-theme" id="theme-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"><i class="fas fa-moon"></i></button>
         <button class="btn-refresh" onclick="loadMatrix()" id="refresh-btn">
           <i class="fas fa-arrows-rotate"></i> Actualizar
         </button>
@@ -363,8 +365,6 @@
         <label class="form-label">Tipo de cancha</label>
         <select class="form-select" id="m-type" onchange="onTypeChange()">
           <option value="">Elegir tipo</option>
-          <option value="F5">Fútbol 5</option>
-          <option value="F7">Fútbol 7</option>
         </select>
       </div>
       <div class="form-group">
@@ -513,7 +513,7 @@
       <button class="btn-cancel-modal" onclick="closeDetailModal()">Cerrar</button>
       <button class="btn-edit-booking" id="detail-action-edit" onclick="openEditFromDetail()"><i class="fas fa-pen"></i> Editar</button>
       <button class="btn-delete-booking" id="detail-action-cancel" onclick="showCancelConfirm()"><i class="fas fa-ban"></i> Cancelar reserva</button>
-      <button class="btn-delete-booking" id="detail-action-delete" onclick="showDeleteConfirm()" title="Solo jefes"><i class="fas fa-trash"></i></button>
+      <button class="btn-delete-booking" id="detail-action-delete" onclick="showDeleteConfirm()" title="Solo Admin"><i class="fas fa-trash"></i></button>
     </div>
     </div>
   </div>
@@ -543,8 +543,6 @@
       <div class="form-group">
         <label class="form-label">Tipo de cancha</label>
         <select class="form-select" id="e-type" onchange="onEditTypeChange()">
-          <option value="F5">Fútbol 5</option>
-          <option value="F7">Fútbol 7</option>
         </select>
       </div>
       <div class="form-group">
@@ -809,7 +807,7 @@
 <!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-config.js"></script>
-<script src="js/supabase-api.js?v=20261001b"></script>
-<script src="js/script.js?v=20261001b"></script>
+<script src="js/supabase-api.js?v=20261005e"></script>
+<script src="js/script.js?v=20261005e"></script>
 </body>
 </html>

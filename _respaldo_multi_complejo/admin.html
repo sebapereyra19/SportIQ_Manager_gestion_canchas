@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Plataforma — Complejos</title>
+  <link rel="icon" type="image/svg+xml" href="../../public/images/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg: #e9ece8; --card: #ffffff; --line: #e6e9e4; --line-strong: #d5dbd4;
+      --brand: #1a7a48; --brand-grad: linear-gradient(135deg, #1f8a52 0%, #135133 55%, #0e3b25 100%);
+      --brand-dim: rgba(26,122,72,0.10); --glow: rgba(26,122,72,0.22);
+      --red: #d64545; --red-dim: rgba(214,69,69,0.10);
+      --amber-bg: #fdf5e1; --amber-line: #f1d58f; --amber-ink: #8a5d00;
+      --text: #13201a; --dim: #45524b; --muted: #6c7872; --faint: #9aa49f;
+      --r-lg: 20px; --r-md: 14px; --r-sm: 10px;
+      --shadow: 0 8px 24px rgba(16,32,24,0.06); --shadow-lg: 0 24px 60px rgba(16,32,24,0.16);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    button, input { font: inherit; color: inherit; }
+    .hidden { display: none !important; }
+
+    /* login */
+    #login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .login-card { background: var(--card); border: 1px solid var(--line); border-radius: 28px; padding: 40px 36px;
+                  width: 100%; max-width: 410px; box-shadow: var(--shadow-lg); }
+    .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .logo img { width: 44px; height: 44px; border-radius: 50%; }
+    .logo b { font-size: 15px; font-weight: 800; line-height: 1.2; }
+    .logo small { display: block; font-size: 11px; font-weight: 600; color: var(--brand); }
+    h1 { font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+    .sub { color: var(--muted); font-size: 14px; margin: 6px 0 22px; }
+
+    label { display: block; font-size: 12px; font-weight: 700; color: var(--dim); margin-bottom: 6px; }
+    .field { margin-bottom: 14px; min-width: 0; }
+    input[type=text], input[type=email], input[type=password], input[type=number] {
+      width: 100%; padding: 11px 13px; border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+      background: #fff; font-size: 14px; outline: none; transition: border-color .15s, box-shadow .15s; }
+    input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-dim); }
+    .hint { font-size: 12px; color: var(--faint); margin-top: 5px; overflow-wrap: anywhere; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px;
+           border-radius: 999px; border: 1px solid var(--line-strong); background: #fff; font-size: 13px;
+           font-weight: 700; cursor: pointer; white-space: nowrap; transition: background .15s, transform .15s; }
+    .btn:hover { background: #f5f6f3; }
+    a.btn { text-decoration: none; color: var(--text); }
+    .btn:disabled { opacity: .55; cursor: default; }
+    .btn-primary { background: var(--brand-grad); color: #fff; border: none; box-shadow: 0 10px 24px var(--glow); }
+    .btn-primary:hover { background: var(--brand-grad); transform: translateY(-1px); }
+    .btn-block { width: 100%; padding: 13px; font-size: 15px; }
+    .btn-danger { color: var(--red); }
+    .btn-sm { padding: 7px 12px; font-size: 12px; }
+
+    .msg { border-radius: var(--r-sm); padding: 10px 14px; font-size: 13px; margin-top: 12px; overflow-wrap: anywhere; }
+    .msg.error { background: #fdf0f0; border: 1px solid #f3c1c1; color: var(--red); }
+    .msg.ok { background: var(--brand-dim); border: 1px solid rgba(26,122,72,.25); color: #0e3b25; }
+
+    /* app */
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+             padding: 18px 24px; background: var(--card); border-bottom: 1px solid var(--line); }
+    header .who { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+    main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
+    .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .kpis { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+    .kpi { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 16px; min-width: 130px; }
+    .kpi b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+    .kpi span { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+    .list { display: grid; gap: 12px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px 20px;
+            box-shadow: var(--shadow); min-width: 0; }
+    .card.off { opacity: .7; }
+    .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .card h3 { font-size: 17px; font-weight: 800; overflow-wrap: anywhere; }
+    .link { font-size: 13px; color: var(--brand); text-decoration: none; font-weight: 600; overflow-wrap: anywhere; }
+    .link:hover { text-decoration: underline; }
+    .pill { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px; margin-left: 6px; vertical-align: middle; }
+    .pill.on { background: var(--brand-dim); color: var(--brand); }
+    .pill.off { background: var(--red-dim); color: var(--red); }
+    .stats { display: flex; gap: 18px; flex-wrap: wrap; margin: 12px 0; font-size: 13px; color: var(--dim); }
+    .stats b { color: var(--text); font-variant-numeric: tabular-nums; }
+    .jefes { font-size: 13px; color: var(--dim); display: grid; gap: 6px; }
+    .jefe { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .jefe span { overflow-wrap: anywhere; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .empty { text-align: center; color: var(--muted); padding: 40px 16px; }
+
+    /* modal */
+    .backdrop { position: fixed; inset: 0; background: rgba(10,20,15,.45); display: flex; align-items: flex-start;
+                justify-content: center; padding: 32px 16px; overflow-y: auto; z-index: 10; }
+    .modal { background: var(--card); border-radius: 24px; padding: 26px 24px; width: 100%; max-width: 560px; box-shadow: var(--shadow-lg); }
+    .modal h2 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 10px; }
+    fieldset { border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px 14px 2px; margin: 4px 0 14px; min-width: 0; }
+    legend { font-size: 12px; font-weight: 800; color: var(--brand); padding: 0 6px; }
+    .modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .pass { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 20px; font-weight: 700; letter-spacing: .06em;
+            background: var(--amber-bg); border: 1px dashed var(--amber-line); color: var(--amber-ink);
+            border-radius: var(--r-sm); padding: 12px; text-align: center; margin: 10px 0; overflow-wrap: anywhere; }
+
+    @media (max-width: 560px) {
+      .grid2, .grid4 { grid-template-columns: 1fr 1fr; }
+      header { padding: 14px 16px; }
+      .login-card { padding: 32px 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div id="login">
+  <div class="login-card">
+    <div class="logo">
+      <img src="../../public/images/logo.svg" alt="">
+      <div><b>Plataforma de reservas</b><small>Administración de complejos</small></div>
+    </div>
+    <h1>Iniciar sesión</h1>
+    <p class="sub">Solo para administradores de la plataforma.</p>
+    <form id="login-form">
+      <div class="field"><label for="l-email">Email</label><input type="email" id="l-email" autocomplete="username" required></div>
+      <div class="field"><label for="l-pass">Contraseña</label><input type="password" id="l-pass" autocomplete="current-password" required></div>
+      <button class="btn btn-primary btn-block" id="l-btn">Ingresar</button>
+      <div class="msg error hidden" id="l-error"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ════════════ APP ════════════ -->
+<div id="app" class="hidden">
+  <header>
+    <div class="logo" style="margin:0">
+      <img src="../../public/images/logo.svg" alt="">
+      <div><b>Plataforma de reservas</b><small>Administración de complejos</small></div>
+    </div>
+    <div class="actions" style="align-items:center">
+      <span class="who" id="who"></span>
+      <a class="btn btn-sm" href="panel.html"><i class="fas fa-table-cells"></i> Mi panel</a>
+      <button class="btn btn-sm" onclick="salir()"><i class="fas fa-right-from-bracket"></i> Salir</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="top">
+      <div>
+        <h1>Complejos</h1>
+        <p class="sub" style="margin-bottom:0">Cada complejo tiene su panel, su equipo y sus datos separados.</p>
+      </div>
+      <button class="btn btn-primary" onclick="abrirNuevo()"><i class="fas fa-plus"></i> Nuevo complejo</button>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="list" id="lista"><div class="empty">Cargando…</div></div>
+  </main>
+</div>
+
+<!-- ════════════ MODAL: NUEVO COMPLEJO ════════════ -->
+<div class="backdrop hidden" id="m-nuevo">
+  <div class="modal">
+    <h2>Nuevo complejo</h2>
+    <p class="sub">Se crea con sus canchas, sus horarios y el usuario del jefe.</p>
+    <form id="f-nuevo">
+      <div class="field">
+        <label for="n-nombre">Nombre del complejo</label>
+        <input type="text" id="n-nombre" required maxlength="80" placeholder="Fútbol La Tablada">
+      </div>
+      <div class="field">
+        <label for="n-slug">Dirección pública</label>
+        <input type="text" id="n-slug" required maxlength="40" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="futbol-la-tablada">
+        <div class="hint" id="n-slug-hint"></div>
+      </div>
+      <fieldset>
+        <legend>Primer jefe</legend>
+        <div class="grid2">
+          <div class="field"><label for="n-jnombre">Nombre</label><input type="text" id="n-jnombre" maxlength="60"></div>
+          <div class="field"><label for="n-jemail">Email</label><input type="email" id="n-jemail" required></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Canchas y horarios</legend>
+        <div class="grid4">
+          <div class="field"><label for="n-f5">Fútbol 5</label><input type="number" id="n-f5" min="0" max="30" value="4"></div>
+          <div class="field"><label for="n-pf5">$ por hora</label><input type="number" id="n-pf5" min="0" step="500" value="45000"></div>
+          <div class="field"><label for="n-f7">Fútbol 7</label><input type="number" id="n-f7" min="0" max="30" value="2"></div>
+          <div class="field"><label for="n-pf7">$ por hora</label><input type="number" id="n-pf7" min="0" step="500" value="63000"></div>
+        </div>
+        <div class="grid4">
+          <div class="field"><label for="n-ap">Abre (hs)</label><input type="number" id="n-ap" min="0" max="23" value="9"></div>
+          <div class="field"><label for="n-ci">Cierra (hs)</label><input type="number" id="n-ci" min="1" max="24" value="24"></div>
+        </div>
+        <div class="hint" style="margin:-6px 0 12px">El jefe después puede agregar, renombrar o cambiar precios desde su panel.</div>
+      </fieldset>
+      <div class="msg error hidden" id="n-error"></div>
+      <div class="modal-foot">
+        <button type="button" class="btn" onclick="cerrar('m-nuevo')">Cancelar</button>
+        <button class="btn btn-primary" id="n-btn">Crear complejo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ════════════ MODAL: EDITAR ════════════ -->
+<div class="backdrop hidden" id="m-editar">
+  <div class="modal">
+    <h2>Editar complejo</h2>
+    <p class="sub">Si cambiás la dirección, el link público anterior deja de funcionar.</p>
+    <form id="f-editar">
+      <input type="hidden" id="e-id">
+      <div class="field"><label for="e-nombre">Nombre</label><input type="text" id="e-nombre" required maxlength="80"></div>
+      <div class="field">
+        <label for="e-slug">Dirección pública</label>
+        <input type="text" id="e-slug" required maxlength="40" pattern="[a-z0-9]+(-[a-z0-9]+)*">
+        <div class="hint" id="e-slug-hint"></div>
+      </div>
+      <div class="msg error hidden" id="e-error"></div>
+      <div class="modal-foot">
+        <button type="button" class="btn" onclick="cerrar('m-editar')">Cancelar</button>
+        <button class="btn btn-primary" id="e-btn">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ════════════ MODAL: CONTRASEÑA ════════════ -->
+<div class="backdrop hidden" id="m-pass">
+  <div class="modal">
+    <h2 id="p-titulo">Listo</h2>
+    <p class="sub" id="p-texto"></p>
+    <div class="pass hidden" id="p-pass"></div>
+    <p class="hint" id="p-hint">Pasásela por un canal privado. Al entrar puede cambiarla tocando su nombre, abajo a la izquierda del panel.</p>
+    <div class="modal-foot">
+      <button class="btn hidden" id="p-copiar" onclick="copiarDatos()"><i class="fas fa-copy"></i> Copiar datos de acceso</button>
+      <button class="btn btn-primary" onclick="cerrar('m-pass')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────
+//  Administración de la plataforma (solo super admins).
+//  Lista, crea, edita y suspende complejos. Base: migración 009 +
+//  Edge Function "alta-complejo".
+// ─────────────────────────────────────────────────────────────
+const cfg = window.SUPABASE_CONFIG || {};
+const db  = window.supabase.createClient(cfg.url, cfg.anonKey);
+const $   = id => document.getElementById(id);
+
+// Base del link público de cada complejo: <sitio>/<slug>
+const URL_PUBLICA = location.origin;
+let complejos = [];
+let ultimoAcceso = '';
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const slugDe = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40).replace(/-+$/, '');
+const fmtFecha = iso => {
+  if (!iso) return 'nunca';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ' ' +
+         d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+};
+const mostrar = (id, texto) => { const el = $(id); el.textContent = texto; el.classList.toggle('hidden', !texto); };
+const cerrar  = id => $(id).classList.add('hidden');
+
+// Mensaje de error de una Edge Function (viene en el cuerpo)
+async function errorFuncion(error) {
+  const res = error && error.context;
+  let body = null;
+  if (res && typeof res.text === 'function') {
+    try { const t = await res.clone().text(); try { body = JSON.parse(t); } catch (_) { body = { message: t }; } } catch (_) {}
+  }
+  if (body && body.error) return body.error;
+  const status = res && res.status;
+  const det = body && (body.message || body.msg || body.code);
+  if (status === 401) return `Supabase rechazó la llamada (401${det ? ': ' + det : ''}). En Supabase → Edge Functions → alta-complejo → Details, desactivá "Verify JWT with legacy secret" / "Enforce JWT verification" y guardá: la función ya verifica sola quién la llama.`;
+  if (status === 404) return 'No se encontró la función "alta-complejo" en Supabase. Seguí el paso de instalación del README.';
+  if (!status && /Failed to send|fetch/i.test(error.message || '')) return 'No se pudo llamar a la función "alta-complejo" (¿está desplegada con ese nombre exacto?).';
+  return `La función "alta-complejo" respondió con error${status ? ' ' + status : ''}${det ? ': ' + det : ''}. Mirá Supabase → Edge Functions → alta-complejo → Logs.`;
+}
+
+// ── sesión ─────────────────────────────────────────────
+async function verificar() {
+  const { data: s } = await db.auth.getSession();
+  if (!s.session) return false;
+  const { data, error } = await db.rpc('es_super_admin');
+  if (error || !data) return false;
+  $('who').textContent = s.session.user.email;
+  return true;
+}
+
+$('login-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  mostrar('l-error', '');
+  $('l-btn').disabled = true; $('l-btn').textContent = 'Ingresando…';
+  const { error } = await db.auth.signInWithPassword({ email: $('l-email').value.trim(), password: $('l-pass').value });
+  let msg = '';
+  if (error) msg = /invalid/i.test(error.message) ? 'Email o contraseña incorrectos.' : error.message;
+  else if (!(await verificar())) { msg = 'Este usuario no es administrador de la plataforma.'; await db.auth.signOut(); }
+  $('l-btn').disabled = false; $('l-btn').textContent = 'Ingresar';
+  if (msg) { mostrar('l-error', msg); $('l-pass').value = ''; return; }
+  entrar();
+});
+
+async function salir() { await db.auth.signOut(); location.reload(); }
+
+function entrar() {
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  cargar();
+}
+
+// ── lista ──────────────────────────────────────────────
+async function cargar() {
+  const { data, error } = await db.rpc('admin_listar_complejos');
+  if (error) { $('lista').innerHTML = `<div class="msg error">${esc(error.message)}</div>`; return; }
+  complejos = data || [];
+  render();
+}
+
+function render() {
+  const activos = complejos.filter(c => c.activo).length;
+  const reservas = complejos.reduce((n, c) => n + (c.reservas_30d || 0), 0);
+  $('kpis').innerHTML = `
+    <div class="kpi"><b>${complejos.length}</b><span>Complejos</span></div>
+    <div class="kpi"><b>${activos}</b><span>Activos</span></div>
+    <div class="kpi"><b>${reservas}</b><span>Reservas cargadas (30 días)</span></div>`;
+
+  if (!complejos.length) { $('lista').innerHTML = '<div class="empty">Todavía no hay complejos.</div>'; return; }
+
+  $('lista').innerHTML = complejos.slice().reverse().map(c => {
+    const jefes = (c.jefes || []).map(j => `
+      <div class="jefe">
+        <i class="fas fa-user-tie" style="color:var(--faint)"></i>
+        <span><b>${esc(j.nombre || '—')}</b> · ${esc(j.email)}${j.activo ? '' : ' (inactivo)'}</span>
+        <button class="btn btn-sm" data-email="${esc(j.email)}" onclick="resetear(this.dataset.email)" title="Genera una contraseña temporal nueva">
+          <i class="fas fa-key"></i> Nueva contraseña</button>
+      </div>`).join('') || '<span>Sin jefes cargados</span>';
+    return `
+      <div class="card ${c.activo ? '' : 'off'}">
+        <div class="card-head">
+          <div style="min-width:0">
+            <h3>${esc(c.nombre)}<span class="pill ${c.activo ? 'on' : 'off'}">${c.activo ? 'Activo' : 'Suspendido'}</span></h3>
+            <a class="link" href="${esc(URL_PUBLICA + '/' + c.slug)}" target="_blank" rel="noopener">${esc(URL_PUBLICA.replace(/^https?:\/\//, '') + '/' + c.slug)}</a>
+          </div>
+          <div class="actions">
+            <button class="btn btn-sm" onclick="abrirEditar('${c.id}')"><i class="fas fa-pen"></i> Editar</button>
+            <button class="btn btn-sm ${c.activo ? 'btn-danger' : ''}" onclick="cambiarEstado('${c.id}', ${!c.activo})">
+              <i class="fas ${c.activo ? 'fa-pause' : 'fa-play'}"></i> ${c.activo ? 'Suspender' : 'Reactivar'}</button>
+          </div>
+        </div>
+        <div class="stats">
+          <span><b>${c.canchas}</b> canchas</span>
+          <span><b>${c.empleados}</b> personas activas</span>
+          <span><b>${c.reservas_30d}</b> reservas (30 días)</span>
+          <span>Último acceso: <b>${esc(fmtFecha(c.ultimo_acceso))}</b></span>
+          <span>Alta: <b>${esc(fmtFecha(c.created_at))}</b></span>
+        </div>
+        <div class="jefes">${jefes}</div>
+      </div>`;
+  }).join('');
+}
+
+// ── nuevo ──────────────────────────────────────────────
+let slugTocado = false;
+function abrirNuevo() {
+  $('f-nuevo').reset(); slugTocado = false; mostrar('n-error', ''); hintSlug('n');
+  $('m-nuevo').classList.remove('hidden'); $('n-nombre').focus();
+}
+function hintSlug(p) {
+  const s = $(p + '-slug').value;
+  $(p + '-slug-hint').textContent = s ? `Sitio público: ${URL_PUBLICA.replace(/^https?:\/\//, '')}/${s}` : 'Solo minúsculas, números y guiones.';
+}
+$('n-nombre').addEventListener('input', () => { if (!slugTocado) { $('n-slug').value = slugDe($('n-nombre').value); hintSlug('n'); } });
+$('n-slug').addEventListener('input', () => { slugTocado = true; $('n-slug').value = slugDe($('n-slug').value); hintSlug('n'); });
+$('e-slug').addEventListener('input', () => { $('e-slug').value = slugDe($('e-slug').value); hintSlug('e'); });
+
+$('f-nuevo').addEventListener('submit', async e => {
+  e.preventDefault();
+  mostrar('n-error', '');
+  const btn = $('n-btn'); btn.disabled = true; btn.textContent = 'Creando…';
+  const body = {
+    accion: 'crear',
+    nombre: $('n-nombre').value.trim(), slug: $('n-slug').value.trim(),
+    jefe_nombre: $('n-jnombre').value.trim(), jefe_email: $('n-jemail').value.trim(),
+    canchas_f5: $('n-f5').value, precio_f5: $('n-pf5').value,
+    canchas_f7: $('n-f7').value, precio_f7: $('n-pf7').value,
+    apertura: $('n-ap').value, cierre: $('n-ci').value,
+  };
+  const { data, error } = await db.functions.invoke('alta-complejo', { body });
+  btn.disabled = false; btn.textContent = 'Crear complejo';
+  if (error) {
+    const msg = await errorFuncion(error);
+    // si el complejo se creó pero falló el usuario, igual refrescamos la lista
+    if (/se creó/.test(msg)) { cerrar('m-nuevo'); cargar(); verResultado('Complejo creado con un problema', msg, null, null); }
+    else mostrar('n-error', msg);
+    return;
+  }
+  cerrar('m-nuevo');
+  await cargar();
+  verResultado(
+    `${body.nombre} está listo`,
+    data.password
+      ? `El jefe entra al panel con ${data.email} y esta contraseña temporal:`
+      : `${data.email} ya tenía usuario de login: entra con su contraseña de siempre.`,
+    data.password, { email: data.email, slug: data.complejo?.slug || body.slug });
+});
+
+// ── editar / suspender ─────────────────────────────────
+function abrirEditar(id) {
+  const c = complejos.find(x => x.id === id); if (!c) return;
+  $('e-id').value = id; $('e-nombre').value = c.nombre; $('e-slug').value = c.slug;
+  mostrar('e-error', ''); hintSlug('e');
+  $('m-editar').classList.remove('hidden');
+}
+
+$('f-editar').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = $('e-btn'); btn.disabled = true;
+  const { error } = await db.rpc('admin_editar_complejo', {
+    p_id: $('e-id').value, p_nombre: $('e-nombre').value.trim(), p_slug: $('e-slug').value.trim(),
+  });
+  btn.disabled = false;
+  if (error) return mostrar('e-error', error.message);
+  cerrar('m-editar'); cargar();
+});
+
+async function cambiarEstado(id, activo) {
+  const c = complejos.find(x => x.id === id); if (!c) return;
+  if (!activo && !confirm(`¿Suspender "${c.nombre}"?\n\nNadie de su equipo va a poder entrar al panel y su sitio público deja de mostrarse. Los datos no se borran: se puede reactivar cuando quieras.`)) return;
+  const { error } = await db.rpc('admin_editar_complejo', { p_id: id, p_activo: activo });
+  if (error) return alert(error.message);
+  cargar();
+}
+
+// ── contraseñas ────────────────────────────────────────
+async function resetear(email) {
+  if (!confirm(`¿Generar una contraseña temporal nueva para ${email}?\nLa actual deja de funcionar.`)) return;
+  const { data, error } = await db.functions.invoke('alta-complejo', { body: { accion: 'resetear', email } });
+  if (error) return verResultado('No se pudo', await errorFuncion(error), null, null);
+  verResultado('Contraseña nueva', `${email} entra al panel con esta contraseña temporal:`, data.password, { email });
+}
+
+function verResultado(titulo, texto, password, datos) {
+  ultimoAcceso = password && datos
+    ? [`Panel: ${new URL('panel.html', location.href).href}`, `Usuario: ${datos.email}`, `Contraseña temporal: ${password}`,
+       datos.slug ? `Sitio público: ${URL_PUBLICA}/${datos.slug}` : ''].filter(Boolean).join('\n')
+    : '';
+  $('p-titulo').textContent = titulo;
+  $('p-texto').textContent = texto;
+  $('p-pass').textContent = password || '';
+  $('p-pass').classList.toggle('hidden', !password);
+  $('p-hint').classList.toggle('hidden', !password);
+  $('p-copiar').classList.toggle('hidden', !ultimoAcceso);
+  $('m-pass').classList.remove('hidden');
+}
+
+async function copiarDatos() {
+  try { await navigator.clipboard.writeText(ultimoAcceso); $('p-copiar').innerHTML = '<i class="fas fa-check"></i> Copiado'; }
+  catch (_) { prompt('Copiá estos datos:', ultimoAcceso); }
+  setTimeout(() => { $('p-copiar').innerHTML = '<i class="fas fa-copy"></i> Copiar datos de acceso'; }, 2000);
+}
+
+// Cerrar modales con Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') ['m-nuevo', 'm-editar', 'm-pass'].forEach(cerrar); });
+
+(async () => { if (await verificar()) entrar(); })();
+</script>
+</body>
+</html>
