@@ -54,7 +54,7 @@
   // ── reservas: formato que espera script.js ──────────────
   const SELECT_RESERVA =
     'id, cancha_id, fecha, hora_inicio, duracion, precio, sena, tipo_sena, estado_sena, ' +
-    'estado, pago_restante, tipo_pago_restante, pago_restante_transf, notas, origen, created_at, updated_at, ' +
+    'precio_personalizado, tipo_evento, estado, pago_restante, tipo_pago_restante, pago_restante_transf, notas, origen, created_at, updated_at, ' +
     'creada_por, modificada_por, sena_por, sena_at, asistencia_por, asistencia_at, ' +
     'cancelada_por, cancelada_at, motivo_cancelacion, turno_fijo_id, ' +
     'cliente:clientes(nombre, telefono)';
@@ -73,6 +73,8 @@
       startTime:        hora,
       duration:         r.duracion,
       price:            num(r.precio),
+      precioPersonalizado: r.precio_personalizado == null ? null : num(r.precio_personalizado),
+      tipoEvento:       r.tipo_evento || '',
       name:             r.cliente?.nombre   || '',
       phone:            r.cliente?.telefono || '',
       sena:             num(r.sena),
@@ -149,6 +151,13 @@
       .single();
     if (error) throw error;
     return data.id;
+  }
+
+  // Precio a mano: vacío / inválido = tarifa normal de la cancha
+  function precioNullable(v) {
+    if (v === '' || v == null) return null;
+    const n = parseFloat(v);
+    return isNaN(n) || n < 0 ? null : n;
   }
 
   function camposSena({ sena, tipoSena, estadoSena }) {
@@ -404,7 +413,7 @@
     },
 
     // RESERVAS
-    async makeReservation({ court, date, time, duration, name, phone, sena, tipoSena, estadoSena, origen }) {
+    async makeReservation({ court, date, time, duration, name, phone, sena, tipoSena, estadoSena, origen, precioPersonalizado, tipoEvento, notas }) {
       try {
         const cliente_id = await upsertCliente(name, phone);
         const { data, error } = await db.from('reservas').insert({
@@ -414,6 +423,11 @@
           hora_inicio: time,
           duracion: parseInt(duration) || 1,
           origen: origen || 'Dashboard',
+          precio_personalizado: precioNullable(precioPersonalizado),
+          tipo_evento: tipoEvento || null,
+          notas: notas || null,
+          precio_personalizado: precioNullable(precioPersonalizado),
+          tipo_evento: tipoEvento || null,
           ...camposSena({ sena, tipoSena, estadoSena }),
         }).select('id').single();
         if (error) throw error;
@@ -422,7 +436,7 @@
       } catch (e) { return fail(e); }
     },
 
-    async updateReservation({ recordId, court, date, time, duration, name, phone, notas, sena, tipoSena, estadoSena }) {
+    async updateReservation({ recordId, court, date, time, duration, name, phone, notas, sena, tipoSena, estadoSena, precioPersonalizado, tipoEvento }) {
       try {
         const cliente_id = await upsertCliente(name, phone);
         const { error } = await db.from('reservas').update({
@@ -556,12 +570,12 @@
     async getTurnosFijos() {
       try {
         const { data, error } = await db.from('turnos_fijos')
-          .select('id, cancha_id, dia_semana, hora_inicio, duracion, desde, hasta, activo, notas, creado_por, created_at, dado_de_baja_por, baja_at, cliente:clientes(nombre, telefono)')
+          .select('id, cancha_id, dia_semana, hora_inicio, duracion, desde, hasta, activo, notas, precio_personalizado, creado_por, created_at, dado_de_baja_por, baja_at, cliente:clientes(nombre, telefono)')
           .order('activo', { ascending: false }).order('dia_semana').order('hora_inicio');
         if (error) throw error;
         return ok({ turnos: data.map(t => ({
           id: t.id, court: t.cancha_id, dia: t.dia_semana, time: hhmm(t.hora_inicio),
-          duration: t.duracion, desde: t.desde, hasta: t.hasta, activo: t.activo, notas: t.notas || '',
+          duration: t.duracion, precioPersonalizado: t.precio_personalizado == null ? null : num(t.precio_personalizado), desde: t.desde, hasta: t.hasta, activo: t.activo, notas: t.notas || '',
           creadoPor: t.creado_por || '', creadoAt: t.created_at,
           bajaPor: t.dado_de_baja_por || '', bajaAt: t.baja_at,
           name: t.cliente?.nombre || '', phone: t.cliente?.telefono || '',
@@ -571,7 +585,7 @@
 
     // Crea el turno fijo y las reservas de las próximas semanas.
     // La seña (si se cargó) se aplica a la primera fecha.
-    async createTurnoFijo({ court, date, time, duration, name, phone, sena, tipoSena, estadoSena, hoy, hasta }) {
+    async createTurnoFijo({ court, date, time, duration, name, phone, sena, tipoSena, estadoSena, hoy, hasta, precioPersonalizado }) {
       try {
         const cliente_id = await upsertCliente(name, phone);
         const [y, m, d] = date.split('-').map(Number);
@@ -579,6 +593,7 @@
           cancha_id: court, cliente_id,
           dia_semana: new Date(y, m - 1, d).getDay(),
           hora_inicio: time, duracion: parseInt(duration) || 1, desde: date,
+          precio_personalizado: precioNullable(precioPersonalizado),
         }).select('id').single();
         if (error) {
           if (error.code === '23P01') throw { message: 'Ya hay otro turno fijo activo en esa cancha, ese día y horario.' };
@@ -606,13 +621,14 @@
     },
 
     // Editar un turno fijo: mueve las repeticiones desde "desde" al horario nuevo
-    async editTurnoFijo({ id, court, dia, time, duration, name, phone, notas, desde, hoy, hasta }) {
+    async editTurnoFijo({ id, court, dia, time, duration, name, phone, notas, desde, hoy, hasta, precioPersonalizado }) {
       try {
         const cliente_id = await upsertCliente(name, phone);
         const { data, error } = await db.rpc('editar_turno_fijo', {
           p_id: id, p_cancha: court, p_cliente_id: cliente_id, p_dia: parseInt(dia),
           p_hora: time, p_duracion: parseInt(duration) || 1, p_notas: notas || null,
           p_desde: desde || hoy, p_hoy: hoy, p_hasta: hasta || null,
+          p_precio: precioNullable(precioPersonalizado),
         });
         if (error) {
           if (error.code === '23P01') throw { message: 'Ya hay otro turno fijo activo en esa cancha, ese día y horario.' };

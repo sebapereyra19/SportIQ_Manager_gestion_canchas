@@ -89,7 +89,7 @@ Tablas: `canchas` (con precio por hora), `clientes` (identificados por WhatsApp)
 
 ### Instalar para un cliente nuevo (otra cuenta de Supabase)
 
-`database/instalar_base_cliente.sql` crea la base completa en un solo paso (equivale a correr 001 → 010), vacía y lista para usar. Verificado contra la base original: mismas tablas, columnas, restricciones, índices, triggers, políticas y funciones.
+`database/instalar_base_cliente.sql` crea la base completa en un solo paso (equivale a correr 001 → 011), vacía y lista para usar. Verificado contra la base original: mismas tablas, columnas, restricciones, índices, triggers, políticas y funciones.
 
 1. En la cuenta del cliente: crear proyecto nuevo (región São Paulo).
 2. SQL Editor → pegar todo `instalar_base_cliente.sql` → Run.

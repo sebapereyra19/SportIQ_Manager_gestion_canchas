@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────
-//  DASHBOARD — Panel de gestión Complejo Deportivo
+//  DASHBOARD — Panel de gestión SportIQ Manager
 // ─────────────────────────────────────────────────────────
 
 // CONFIG
@@ -98,6 +98,8 @@ function applyRole() {
   document.getElementById('sidebar-user-name').textContent   = nombre;
   document.getElementById('sidebar-user-avatar').textContent = nombre.charAt(0).toUpperCase();
   document.getElementById('sidebar-user-role').textContent   = ROL_LABEL[userRol];
+  const primerNombre = nombre.trim().split(/\s+/)[0];
+  document.getElementById('home-title').textContent = `Hola, ${primerNombre.charAt(0).toUpperCase()}${primerNombre.slice(1)}`;
   document.querySelectorAll('.solo-jefe').forEach(el => { el.style.display = esJefe() ? '' : 'none'; });
   document.getElementById('nav-monthly').style.display = esJefe() ? '' : 'none';
   document.getElementById('nav-team').style.display    = esJefe() ? '' : 'none';
@@ -154,6 +156,15 @@ async function asegurarTurnosFijos(fecha) {
 }
 
 // Precio total de una cancha por X horas (mismo cálculo que hace la base)
+// Devuelve un mensaje de error si el turno termina después del cierre del complejo, o null si es válido.
+function errorFueraDeHorario(time, duration) {
+  const inicio = parseInt(time);
+  const dur    = parseInt(duration) || 1;
+  if (isNaN(inicio) || inicio + dur <= HORARIO.cierre) return null;
+  const maxHs = HORARIO.cierre - inicio;
+  return `El complejo cierra a las ${HORARIO.cierre}:00. Desde las ${pad(inicio)}:00 podés reservar como máximo ${maxHs} hora${maxHs > 1 ? 's' : ''}.`;
+}
+
 function courtPrice(courtId, duration = 1) {
   return (PRICES[courtId] || 0) * (parseInt(duration) || 1);
 }
@@ -424,11 +435,11 @@ async function loadMatrix(silent = false) {
 
 // —.——.— MATRIX RENDER —.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.—
 function buildGridHeader() {
-  let html = `<div class="mg-header corner-cell">Hora</div>`;
+  let html = `<div class="mg-header corner-cell"><i class="far fa-clock"></i> Hora</div>`;
   COURTS.forEach(c => {
     html += `<div class="mg-header">
       <div class="court-badge-label">
-        <span class="court-type-tag ${c.type.toLowerCase()}">${c.type}</span>${c.label}
+        <span class="court-type-tag ${c.type.toLowerCase()}">${c.type}</span><i class="fas fa-futbol court-ico"></i>${c.label}
       </div>
     </div>`;
   });
@@ -462,28 +473,39 @@ function renderMatrix() {
       const isAsistida = info && info.status === 'Asistida';
       const hasSena    = info && (info.estadoSena || 'Pendiente') === 'Recibida';
       const cls        = isBooked ? (isAsistida ? 'asistida' : hasSena ? 'occupied' : 'no-sena') : 'free';
-      const nowCls     = isNow ? ' now-col' : '';
+      const evCls      = info?.tipoEvento ? (info.tipoEvento === 'Cumpleaños' ? ' ev-cumple' : ' ev-evento') : '';
+      const nowCls     = (isNow ? ' now-col' : '') + evCls;
       const click      = isBooked
         ? `onclick="showBookingDetail('${c.id}','${t}')"`
         : `onclick="quickBook('${c.id}','${c.type}','${t}')"`;
       const title      = isBooked
-        ? (info?.name ? `${info.name} — ${isAsistida ? 'Asistió ✓' : hasSena ? 'Seña recibida' : 'Sin seña'} — ver detalles` : (isAsistida ? 'Asistida — ver detalles' : hasSena ? 'Seña recibida — ver detalles' : 'Sin seña — ver detalles'))
+        ? (info?.name ? `${info.tipoEvento ? 'Evento · ' + info.tipoEvento + ' — ' : ''}${info.name} — ${isAsistida ? 'Asistió ✓' : hasSena ? 'Seña recibida' : 'Sin seña'} — ver detalles` : (isAsistida ? 'Asistida — ver detalles' : hasSena ? 'Seña recibida — ver detalles' : 'Sin seña — ver detalles'))
         : 'Disponible — click para reservar';
+      const icon = !isBooked ? '<span class="slot-ico dot"></span>'
+        : isAsistida ? '<span class="slot-ico person"><i class="far fa-user"></i></span>'
+        : hasSena ? '<span class="slot-ico ring"></span>'
+        : '<span class="slot-ico empty"></span>';
       let labelHtml;
       if (isBooked && info?.name) {
         const firstName  = info.name.split(' ')[0];
-        const slotStatus = isAsistida ? 'asistió' : hasSena ? 'señado' : 'sin seña';
-        labelHtml = `<span class="slot-name">${info.turnoFijoId ? '<i class="fas fa-repeat" style="font-size:9px;opacity:.75;margin-right:3px" title="Turno fijo"></i>' : ''}${escHtml(firstName)}</span><span class="slot-status">${slotStatus}</span>`;
+        const slotStatus = isAsistida ? 'Asistida' : hasSena ? 'Con seña' : 'Sin seña';
+        labelHtml = `<span class="slot-text"><span class="slot-name">${info.turnoFijoId ? '<i class="fas fa-repeat" style="font-size:9px;opacity:.75;margin-right:3px" title="Turno fijo"></i>' : ''}${info.tipoEvento ? `<i class="fas ${iconoEvento(info.tipoEvento)}" style="font-size:10px;margin-right:3px" title="${escHtml(info.tipoEvento)}"></i>` : ''}${escHtml(firstName)}</span><span class="slot-status">${slotStatus}</span></span>`;
       } else if (isBooked) {
-        labelHtml = `<span class="slot-name">${isAsistida ? 'Asistida' : hasSena ? 'Reservado' : 'Sin seña'}</span>`;
+        labelHtml = `<span class="slot-text"><span class="slot-name">${isAsistida ? 'Asistida' : hasSena ? 'Reservado' : 'Sin seña'}</span></span>`;
       } else {
-        labelHtml = `<span class="slot-name">Libre</span>`;
+        labelHtml = `<span class="slot-text"><span class="slot-name">Libre</span></span>`;
       }
+      labelHtml = icon + labelHtml + '<i class="fas fa-chevron-right slot-arrow"></i>';
       html += `<div class="mg-slot-cell"><div class="slot ${cls}${nowCls}" ${click} title="${title}">${labelHtml}</div></div>`;
     });
   });
   html += `</div>`;
   document.getElementById('matrix-wrap').innerHTML = html;
+}
+
+// Ícono de cada tipo de evento
+function iconoEvento(tipo) {
+  return tipo === 'Cumpleaños' ? 'fa-cake-candles' : tipo === 'Torneo' ? 'fa-trophy' : 'fa-champagne-glasses';
 }
 
 // —.——.— STATS —.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.——.—
@@ -655,6 +677,9 @@ function openNewBookingModal() {
   document.getElementById('m-tipo-sena').value = 'Sin seña';
   document.getElementById('m-sena-estado-wrap').style.display = 'none';
   document.getElementById('m-fijo').checked = false;
+  document.getElementById('m-evento').value = '';
+  document.getElementById('m-precio').value = '';
+  onEventoChange();
   onFijoChange();
   closeAcList();
   updatePricePreview();
@@ -667,8 +692,27 @@ function closeNewBookingModal() {
   clearModalAlert();
 }
 
+// ¿El usuario ya cargó algo en el formulario?
+function bookingModalDirty() {
+  const val = id => (document.getElementById(id).value || '').trim();
+  return !!(val('m-name') || val('m-phone') || val('m-precio') || val('m-sena') ||
+            val('m-evento') || document.getElementById('m-fijo').checked);
+}
+
+// Cierre pedido por el usuario (click afuera, X, Cancelar): pide confirmación si hay datos
+function requestCloseNewBookingModal() {
+  if (bookingModalDirty() && !confirm('Tenés datos cargados en la reserva.\n\n¿Salir y descartarlos?')) return;
+  closeNewBookingModal();
+}
+
+// Solo cierra si el click empezó y terminó en el fondo (no al arrastrar desde un input)
+let bookingOverlayDown = false;
+document.getElementById('booking-modal-overlay').addEventListener('mousedown', e => {
+  bookingOverlayDown = e.target === e.currentTarget;
+});
 document.getElementById('booking-modal-overlay').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeNewBookingModal();
+  if (e.target === e.currentTarget && bookingOverlayDown) requestCloseNewBookingModal();
+  bookingOverlayDown = false;
 });
 
 // Selects "Tipo de cancha" de los modales: solo los tipos que tienen canchas activas
@@ -700,16 +744,31 @@ function onTypeChange() {
 }
 
 function updatePricePreview() {
-  renderPricePreview('m-court', 'm-duration', 'price-preview', 'price-preview-val');
+  renderPricePreview('m-court', 'm-duration', 'price-preview', 'price-preview-val', 'm-precio');
+}
+
+// Al elegir un evento no tiene sentido repetirlo cada semana
+function onEventoChange() {
+  const ev = document.getElementById('m-evento').value;
+  const fijo = document.getElementById('m-fijo');
+  if (ev) { fijo.checked = false; onFijoChange(); }
+  fijo.disabled = !!ev;
+  fijo.closest('.fijo-toggle').style.opacity = ev ? '.5' : '';
 }
 
 // Muestra el precio de la cancha elegida (sale de la base, igual que el que se cobra)
-function renderPricePreview(courtSelId, durSelId, boxId, valId) {
+function renderPricePreview(courtSelId, durSelId, boxId, valId, precioInputId) {
   const court = document.getElementById(courtSelId).value;
   const dur   = parseInt(document.getElementById(durSelId).value) || 1;
   if (!court || PRICES[court] == null) { document.getElementById(boxId).style.display = 'none'; return; }
   const hora = PRICES[court];
   document.getElementById(boxId).style.display = 'flex';
+  const custom = precioInputId ? parseFloat(document.getElementById(precioInputId).value) : NaN;
+  if (!isNaN(custom) && custom >= 0) {
+    const normal = hora * dur;
+    document.getElementById(valId).textContent = '$' + custom.toLocaleString('es-AR') + ` (tarifa normal $${normal.toLocaleString('es-AR')})`;
+    return;
+  }
   document.getElementById(valId).textContent =
     '$' + (hora * dur).toLocaleString('es-AR') + (dur > 1 ? ` (${dur} hs × $${hora.toLocaleString('es-AR')})` : '');
 }
@@ -736,19 +795,26 @@ async function submitNewBooking() {
   const sena       = parseFloat(document.getElementById('m-sena').value) || 0;
   const tipoSena   = document.getElementById('m-tipo-sena').value || 'Sin seña';
   const estadoSena = tipoSena === 'Sin seña' ? 'Pendiente' : (document.getElementById('m-estado-sena').value || 'Pendiente');
+  const tipoEvento = document.getElementById('m-evento').value;
+  const precioPersonalizado = document.getElementById('m-precio').value.trim();
 
   if (!court)  return showModalAlert('Seleccioná una cancha.');
   if (!date)   return showModalAlert('Seleccioná una fecha.');
   if (!time)   return showModalAlert('Seleccioná un horario.');
+  const fueraDeHorario = errorFueraDeHorario(time, duration);
+  if (fueraDeHorario) return showModalAlert(fueraDeHorario);
   if (!name)   return showModalAlert('Ingresá el nombre del cliente.');
   if (!phone)  return showModalAlert('Ingresá el WhatsApp del cliente.');
+  if (precioPersonalizado !== '' && !(parseFloat(precioPersonalizado) >= 0)) return showModalAlert('El precio acordado no es válido.');
+  if (tipoEvento && precioPersonalizado === '') return showModalAlert('Para un evento ingresá el precio acordado (el total del evento).');
+  if (precioPersonalizado !== '' && sena > parseFloat(precioPersonalizado)) return showModalAlert('La seña no puede ser mayor al precio acordado.');
 
   const btn = document.getElementById('confirm-booking-btn');
   btn.disabled    = true;
   btn.innerHTML   = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
   if (document.getElementById('m-fijo').checked) {
-    const r = await SheetsAPI.createTurnoFijo({ court, date, time, duration, name, phone, sena, tipoSena, estadoSena,
+    const r = await SheetsAPI.createTurnoFijo({ court, date, time, duration, name, phone, sena, tipoSena, estadoSena, precioPersonalizado,
                                                hoy: todayStr(), hasta: fijosHasta > finDeMes(date, 2) ? fijosHasta : finDeMes(date, 2) });
     if (!r.success) {
       btn.disabled  = false;
@@ -771,7 +837,7 @@ async function submitNewBooking() {
     return;
   }
 
-  const result = await SheetsAPI.makeReservation({ court, date, time, duration, name, phone, sena, tipoSena, estadoSena, origen: 'Dashboard' });
+  const result = await SheetsAPI.makeReservation({ court, date, time, duration, name, phone, sena, tipoSena, estadoSena, origen: 'Dashboard', precioPersonalizado, tipoEvento });
 
   if (result.success) {
     btn.style.display = 'none';
@@ -780,7 +846,7 @@ async function submitNewBooking() {
     if (!bookingDetailsMap[court]) bookingDetailsMap[court] = {};
     const startIdx    = TIME_SLOTS.indexOf(time);
     const ahora       = new Date().toISOString();
-    const bookingInfo = { name, phone, price: courtPrice(court, duration), startTime: time, duration, status: 'Confirmada', sena, tipoSena, estadoSena, recordId: result.id,
+    const bookingInfo = { name, phone, price: precioPersonalizado !== '' ? parseFloat(precioPersonalizado) : courtPrice(court, duration), precioPersonalizado: precioPersonalizado !== '' ? parseFloat(precioPersonalizado) : null, tipoEvento, startTime: time, duration, status: 'Confirmada', sena, tipoSena, estadoSena, recordId: result.id,
                           creadaPor: yoNombre(), creadaAt: ahora,
                           ...(estadoSena === 'Recibida' && tipoSena !== 'Sin seña' ? { senaPor: yoNombre(), senaAt: ahora } : {}) };
     for (let i = 0; i < duration; i++) {
@@ -859,7 +925,7 @@ function showBookingDetail(courtId, slot) {
   document.getElementById('detail-action-cancel').style.display = info && info.status === 'Confirmada' ? '' : 'none';
   document.getElementById('detail-action-delete').style.display = info && esJefe() ? '' : 'none';
 
-  document.getElementById('detail-subtitle').textContent = court ? court.name + ' — ' + court.label : courtId;
+  document.getElementById('detail-subtitle').innerHTML = court ? `${escHtml(court.name)} <span class="dash">—</span> <em>${escHtml(court.label)}</em>` : escHtml(courtId);
   document.getElementById('detail-when').innerHTML = `<span><i class="fas fa-calendar-day"></i> ${escHtml(dateLabel)}</span>`;
 
   // Botones de seña
@@ -889,7 +955,7 @@ function showBookingDetail(courtId, slot) {
 
   const endIdx     = TIME_SLOTS.indexOf(info.startTime) + info.duration;
   const endTime    = TIME_SLOTS[endIdx] ? TIME_SLOTS[endIdx] : `${parseInt(info.startTime) + info.duration}:00`;
-  const totalPrice = info.price || courtPrice(courtId, info.duration);
+  const totalPrice = info.precioPersonalizado != null ? info.precioPersonalizado : (info.price || courtPrice(courtId, info.duration));
   const tipoSena   = info.tipoSena   || 'Sin seña';
   const estadoSena = info.estadoSena || 'Pendiente';
   const senaMonto  = info.sena || 0;
@@ -906,10 +972,11 @@ function showBookingDetail(courtId, slot) {
   const senaOk     = estadoSena === 'Recibida';
 
   document.getElementById('detail-when').innerHTML = `
-    <span><i class="fas fa-calendar-day"></i> ${escHtml(dateLabel)}</span>
-    <span><i class="fas fa-clock"></i> ${escHtml(info.startTime)} a ${escHtml(endTime)} hs</span>
-    <span class="status-pill"><i class="fas ${asistida ? 'fa-circle-check' : 'fa-calendar-check'}"></i> ${escHtml(info.status || 'Confirmada')}</span>
-    ${info.turnoFijoId ? '<span class="status-pill"><i class="fas fa-repeat"></i> Turno fijo</span>' : ''}`;
+    <span><i class="fas fa-calendar-days"></i> ${escHtml(dateLabel)}</span>
+    <span><i class="far fa-clock"></i> ${escHtml(info.startTime)} a ${escHtml(endTime)} hs</span>
+    <span class="status-pill"><i class="fas fa-circle-check"></i> ${escHtml(info.status || 'Confirmada')}</span>
+    ${info.turnoFijoId ? '<span class="status-pill"><i class="fas fa-repeat"></i> Turno fijo</span>' : ''}
+    ${info.tipoEvento ? `<span class="status-pill ${info.tipoEvento === 'Cumpleaños' ? 'ev-cumple' : 'ev-evento'}"><i class="fas ${iconoEvento(info.tipoEvento)}"></i> Evento · ${escHtml(info.tipoEvento)}</span>` : ''}`;
 
   const money = (icon, label, value) =>
     `<div class="dt-money-row"><span><i class="fas ${icon}"></i> ${label}</span><b>${value}</b></div>`;
@@ -919,7 +986,7 @@ function showBookingDetail(courtId, slot) {
       <div class="dt-avatar">${escHtml(inicial)}</div>
       <div class="dt-client-info">
         <div class="dt-client-name">${escHtml(info.name || '—')}</div>
-        <div class="dt-client-phone"><i class="fas fa-phone" style="font-size:11px"></i> ${escHtml(info.phone || '—')}</div>
+        <div class="dt-client-phone"><i class="fas fa-phone"></i> ${escHtml(info.phone || '—')}</div>
       </div>
       ${waPhoneD ? `<div class="dt-contact">
         <a href="https://wa.me/${waPhoneD}" target="_blank" rel="noopener" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
@@ -928,17 +995,17 @@ function showBookingDetail(courtId, slot) {
     </div>
 
     <div class="dt-stats">
-      <div class="dt-stat"><div class="dt-stat-label"><i class="fas fa-hourglass-half"></i> Duración</div>
+      <div class="dt-stat"><span class="dt-stat-ico"><i class="fas fa-hourglass-half"></i></span><div class="dt-stat-label">Duración</div>
         <div class="dt-stat-value">${info.duration} hora${info.duration > 1 ? 's' : ''}</div></div>
-      <div class="dt-stat"><div class="dt-stat-label"><i class="fas fa-flag-checkered"></i> Horario</div>
+      <div class="dt-stat"><span class="dt-stat-ico"><i class="far fa-clock"></i></span><div class="dt-stat-label">Horario</div>
         <div class="dt-stat-value">${escHtml(info.startTime)} – ${escHtml(endTime)}</div></div>
-      <div class="dt-stat"><div class="dt-stat-label"><i class="fas fa-hand-holding-dollar"></i> Seña</div>
+      <div class="dt-stat"><span class="dt-stat-ico"><i class="fas fa-clipboard-check"></i></span><div class="dt-stat-label">Seña</div>
         <div style="margin-top:6px"><span class="sena-badge ${senaOk ? 'recibida' : 'pendiente'}"><i class="fas ${senaOk ? 'fa-circle-check' : 'fa-clock'}"></i> ${tipoSena === 'Sin seña' ? 'Sin seña' : (senaOk ? 'Recibida' : 'Pendiente')}</span></div></div>
     </div>
 
     <div class="dt-money">
-      ${money('fa-tag', 'Costo total', '$' + totalPrice.toLocaleString('es-AR'))}
-      ${tipoSena !== 'Sin seña' ? money('fa-hand-holding-dollar', 'Seña · ' + escHtml(tipoSena), '$' + senaMonto.toLocaleString('es-AR')) : ''}
+      ${money('fa-tag', info.precioPersonalizado != null ? 'Precio acordado' : 'Costo total', '$' + totalPrice.toLocaleString('es-AR'))}
+      ${tipoSena !== 'Sin seña' ? money('fa-user-group', 'Seña <i class="dot">·</i> ' + escHtml(tipoSena), '$' + senaMonto.toLocaleString('es-AR')) : ''}
       <div class="dt-money-total"><span>${asistida ? 'Reserva saldada' : 'Resta pagar'}</span><b>${asistida ? '$' + totalPrice.toLocaleString('es-AR') : '$' + restaPagar.toLocaleString('es-AR')}</b></div>
     </div>
     ${info.notas ? `<div class="dt-notes"><i class="fas fa-note-sticky"></i>${escHtml(info.notas)}</div>` : ''}
@@ -953,7 +1020,7 @@ function showBookingDetail(courtId, slot) {
       <div style="background:var(--brand-50);border:1px solid var(--brand-200);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px">
         <i class="fas fa-circle-check" style="color:var(--green);font-size:22px;flex-shrink:0"></i>
         <div>
-          <div style="font-size:13px;font-weight:700;color:var(--brand-800)">Asistencia confirmada</div>
+          <div style="font-size:13px;font-weight:700;color: var(--label-ink)">Asistencia confirmada</div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${
             info.tipoPagoRestante === 'Transferencia' ? 'El cliente asistió y completó el pago en transferencia.' :
             info.tipoPagoRestante === 'Efectivo'      ? 'El cliente asistió y completó el pago en efectivo.' :
@@ -967,19 +1034,19 @@ function showBookingDetail(courtId, slot) {
     selectedPayMethod = '';
     const restaPagar = Math.max(0, totalPrice - senaMonto);
     const restaHtml  = restaPagar > 0
-      ? `<div style="margin-bottom:14px">
-           <div style="font-size:11px;font-weight:700;color:var(--brand-800);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Cobrar al cliente</div>
+      ? `<div class="cobro-box" style="margin-bottom:14px">
+           <div class="cobro-label"><i class="fas fa-user-group"></i> Cobrar al cliente</div>
            <div style="font-size:28px;font-weight:800;color:var(--green)">$${restaPagar.toLocaleString('es-AR')}</div>
-           <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Total $${totalPrice.toLocaleString('es-AR')} Seña $${senaMonto.toLocaleString('es-AR')}</div>
+           <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Total: $${totalPrice.toLocaleString('es-AR')} · Seña: $${senaMonto.toLocaleString('es-AR')}</div>
          </div>
          <div style="margin-bottom:6px">
-           <div style="font-size:11px;font-weight:700;color:var(--brand-800);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Forma de pago del resto</div>
+           <div style="font-size:11px;font-weight:700;color: var(--label-ink);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Forma de pago del resto</div>
            <div class="pay-method-row">
              <button type="button" class="pay-method-btn" id="pay-transf" onclick="selectPayMethod('Transferencia')">
-               <i class="fas fa-mobile-screen-button"></i> Transferencia
+               <i class="fas fa-credit-card"></i> Transferencia
              </button>
              <button type="button" class="pay-method-btn" id="pay-efect" onclick="selectPayMethod('Efectivo')">
-               <i class="fas fa-money-bill-wave"></i> Efectivo
+               <i class="fas fa-money-bill-1-wave"></i> Efectivo
              </button>
            </div>
            <div class="pay-method-row">
@@ -998,8 +1065,8 @@ function showBookingDetail(courtId, slot) {
     const needsMethod = restaPagar > 0;
     confirmSection.innerHTML = `
       <div style="background:var(--brand-50);border:1px solid var(--brand-200);border-radius:16px;padding:14px">
-        <div style="font-size:11px;font-weight:700;color:var(--brand-800);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:6px">
-          <i class="fas fa-futbol"></i> Confirmar asistencia y pago
+        <div style="font-size:11px;font-weight:700;color: var(--label-ink);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+          <i class="fas fa-circle-check"></i> Confirmar asistencia y pago
         </div>
         ${restaHtml}
         <button class="btn-confirm-attendance" id="btn-confirm-attendance" onclick="confirmAttendance()" ${needsMethod ? 'disabled' : ''}>
@@ -1042,6 +1109,8 @@ function openEditFromDetail() {
     document.getElementById('e-name').value     = info.name !== '—' ? info.name : '';
     document.getElementById('e-phone').value    = info.phone !== '—' ? info.phone : '';
     document.getElementById('e-notas').value    = info.notas || '';
+    document.getElementById('e-evento').value   = info.tipoEvento || '';
+    document.getElementById('e-precio').value   = info.precioPersonalizado != null ? info.precioPersonalizado : '';
     // Seña
     const senaVal      = info.sena || 0;
     const tipoSenaVal  = info.tipoSena   || 'Sin seña';
@@ -1081,7 +1150,7 @@ function onEditTypeChange() {
 }
 
 function updateEditPricePreview() {
-  renderPricePreview('e-court', 'e-duration', 'edit-price-preview', 'edit-price-preview-val');
+  renderPricePreview('e-court', 'e-duration', 'edit-price-preview', 'edit-price-preview-val', 'e-precio');
 }
 
 async function submitEditBooking() {
@@ -1097,19 +1166,24 @@ async function submitEditBooking() {
   const sena       = parseFloat(document.getElementById('e-sena').value) || 0;
   const tipoSena   = document.getElementById('e-tipo-sena').value || 'Sin seña';
   const estadoSena = tipoSena === 'Sin seña' ? 'Pendiente' : (document.getElementById('e-estado-sena').value || 'Pendiente');
+  const tipoEvento = document.getElementById('e-evento').value;
+  const precioPersonalizado = document.getElementById('e-precio').value.trim();
 
   if (!recordId) return showEditModalAlert('Error: sin ID de reserva.');
   if (!court)    return showEditModalAlert('Seleccioná una cancha.');
   if (!date)     return showEditModalAlert('Seleccioná una fecha.');
   if (!time)     return showEditModalAlert('Seleccioná un horario.');
+  const fueraDeHorario = errorFueraDeHorario(time, duration);
+  if (fueraDeHorario) return showEditModalAlert(fueraDeHorario);
   if (!name)     return showEditModalAlert('Ingresá el nombre del cliente.');
   if (!phone)    return showEditModalAlert('Ingresá el WhatsApp del cliente.');
+  if (precioPersonalizado !== '' && !(parseFloat(precioPersonalizado) >= 0)) return showEditModalAlert('El precio acordado no es válido.');
 
   const btn = document.getElementById('save-edit-btn');
   btn.disabled  = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
-  const result = await SheetsAPI.updateReservation({ recordId, court, date, time, duration, name, phone, notas, sena, tipoSena, estadoSena });
+  const result = await SheetsAPI.updateReservation({ recordId, court, date, time, duration, name, phone, notas, sena, tipoSena, estadoSena, precioPersonalizado, tipoEvento });
 
   btn.disabled  = false;
   btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Guardar cambios';
@@ -1273,6 +1347,8 @@ function setView(view) {
   SheetsAPI.updatePresence({ vista: view });
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('nav-' + view)?.classList.add('active');
+  document.querySelectorAll('.bn-item').forEach(n => n.classList.remove('active'));
+  (document.getElementById('bn-' + view) || document.getElementById('bn-mas'))?.classList.add('active');
   // cerrar sidebar en móvil al navegar
   document.getElementById('sidebar').classList.remove('mobile-open');
   document.getElementById('sidebar-backdrop').classList.remove('visible');
@@ -1290,6 +1366,7 @@ function setView(view) {
   document.getElementById('monthly-section').style.display = isMonthly ? 'block' : 'none';
   document.getElementById('fijos-section').style.display   = view === 'fijos' ? 'block' : 'none';
   document.getElementById('actividad-section').style.display = view === 'actividad' ? 'block' : 'none';
+  document.getElementById('config-section').style.display  = view === 'config' ? 'block' : 'none';
   document.getElementById('main-content').scrollTop = 0;
 
   const topbarTitle   = document.getElementById('topbar-title');
@@ -1313,6 +1390,10 @@ function setView(view) {
     topbarTitle.textContent     = 'Turnos fijos';
     topbarActions.style.display = 'none';
     loadTurnosFijos();
+  } else if (view === 'config') {
+    topbarTitle.textContent     = 'Configuración';
+    topbarActions.style.display = 'none';
+    renderConfig();
   } else if (view === 'actividad') {
     topbarTitle.textContent     = 'Actividad';
     topbarActions.style.display = 'none';
@@ -1438,7 +1519,7 @@ function openClientDetail(phone) {
       <span class="status-pill ${{ Asistida: 'asistida', Cancelada: 'cancelada', 'No vino': 'cancelada' }[r.status] || 'confirmada'}">${escHtml(r.status)}</span>
     </div>`).join('') || '<p style="color:var(--text-muted);font-size:13px">Todavía no tiene reservas.</p>';
   const extra = c.reservas.length > 15 ? `<div style="font-size:12px;color:var(--text-muted);margin-top:6px">y ${c.reservas.length - 15} reservas más antiguas</div>` : '';
-  const box = (n, l) => `<div style="flex:1;text-align:center;background:var(--brand-50);border:1px solid var(--brand-200);border-radius:14px;padding:10px 4px"><div style="font-size:22px;font-weight:800;color:var(--brand-800)">${n}</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600">${l}</div></div>`;
+  const box = (n, l) => `<div style="flex:1;text-align:center;background:var(--brand-50);border:1px solid var(--brand-200);border-radius:14px;padding:10px 4px"><div style="font-size:22px;font-weight:800;color: var(--label-ink)">${n}</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600">${l}</div></div>`;
   document.getElementById('client-modal-body').innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-right:40px">
       <div style="width:44px;height:44px;background:var(--brand-100);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-user" style="color:var(--brand);font-size:18px"></i></div>
@@ -1732,7 +1813,7 @@ async function loadTurnosFijos() {
   const fila = (t, i) => `
     <tr class="monthly-tr${i % 2 ? ' stripe' : ''}">
       <td class="monthly-td" style="font-weight:700;white-space:nowrap">${DIAS_LARGOS[t.dia]} ${escHtml(t.time)}</td>
-      <td class="monthly-td" style="white-space:nowrap">${escHtml(t.court)} · ${t.duration}h</td>
+      <td class="monthly-td" style="white-space:nowrap">${escHtml(t.court)} · ${t.duration}h${t.precioPersonalizado != null ? `<div style="font-size:12px;color:var(--brand);font-weight:600">$${t.precioPersonalizado.toLocaleString('es-AR')} por turno</div>` : ''}</td>
       <td class="monthly-td"><div style="font-weight:600">${escHtml(t.name)}</div><div style="font-size:12px;color:var(--text-muted)">${escHtml(t.phone)}</div></td>
       <td class="monthly-td" style="white-space:nowrap">${fmtFechaCorta(t.desde)}${t.hasta ? ' → ' + fmtFechaCorta(t.hasta) : ''}</td>
       <td class="monthly-td" style="font-size:12px;color:var(--text-muted)">${t.activo
@@ -1785,6 +1866,7 @@ function openEditTurnoFijo(id) {
   document.getElementById('tf-name').value  = t.name;
   document.getElementById('tf-phone').value = t.phone;
   document.getElementById('tf-notas').value = t.notas || '';
+  document.getElementById('tf-precio').value = t.precioPersonalizado != null ? t.precioPersonalizado : '';
   const desde = document.getElementById('tf-desde');
   desde.min = todayStr();
   desde.value = todayStr();
@@ -1799,7 +1881,7 @@ function closeEditTurnoFijo() {
 }
 
 function updateTfPrice() {
-  renderPricePreview('tf-court', 'tf-duration', 'tf-price-preview', 'tf-price-preview-val');
+  renderPricePreview('tf-court', 'tf-duration', 'tf-price-preview', 'tf-price-preview-val', 'tf-precio');
 }
 
 async function submitEditTurnoFijo() {
@@ -1814,12 +1896,16 @@ async function submitEditTurnoFijo() {
     name:     document.getElementById('tf-name').value.trim(),
     phone:    document.getElementById('tf-phone').value.trim(),
     notas:    document.getElementById('tf-notas').value.trim(),
+    precioPersonalizado: document.getElementById('tf-precio').value.trim(),
     desde:    document.getElementById('tf-desde').value || todayStr(),
     hoy:      todayStr(),
     hasta:    fijosHasta || finDeMes(todayStr(), 2),
   };
+  const fueraDeHorario = errorFueraDeHorario(datos.time, datos.duration);
+  if (fueraDeHorario) return mostrar(fueraDeHorario);
   if (!datos.name)  return mostrar('Ingresá el nombre del cliente.');
   if (!datos.phone) return mostrar('Ingresá el WhatsApp del cliente.');
+  if (datos.precioPersonalizado !== '' && !(parseFloat(datos.precioPersonalizado) >= 0)) return mostrar('El precio acordado no es válido.');
   if (datos.desde < todayStr()) return mostrar('Los cambios se aplican desde hoy en adelante.');
 
   const btn = document.getElementById('tf-save');
@@ -1850,7 +1936,7 @@ async function submitEditTurnoFijo() {
 async function darDeBajaTurnoFijo(id) {
   const t = turnosFijosCache.find(x => x.id === id);
   const nombre = t ? `${t.name} (${DIAS_LARGOS[t.dia]} ${t.time})` : 'este cliente';
-  if (!confirm(`¿Dar de baja el turno fijo de ${nombre}?\n\nSe cancelan las reservas de las próximas semanas (las de hoy no se tocan).`)) return;
+  if (!confirm(`¿Dar de baja el turno fijo de ${nombre}?\n\nSe eliminan las reservas de las próximas semanas (las de hoy no se tocan).`)) return;
   const r = await SheetsAPI.bajaTurnoFijo(id, todayStr());
   if (!r.success) return showToast(r.error, true);
   showToast(`Turno fijo dado de baja. ${r.canceladas} reserva${r.canceladas === 1 ? '' : 's'} futura${r.canceladas === 1 ? '' : 's'} cancelada${r.canceladas === 1 ? '' : 's'}.`);
@@ -2744,7 +2830,7 @@ function computeDayTotals(items) {
     else if (medio === 'Mixto') { transferencias += transf; efectivo += monto - transf; }
   };
   items.forEach(({ court, info }) => {
-    const price  = parseFloat(info.price) || courtPrice(court.id, info.duration);
+    const price  = info.precioPersonalizado != null ? info.precioPersonalizado : (parseFloat(info.price) || courtPrice(court.id, info.duration));
     const senaOk = (info.estadoSena || 'Pendiente') === 'Recibida';
     const sena   = parseFloat(info.sena) || 0;
     if (senaCobradaHoy(info)) cobrar(sena, info.tipoSena);
@@ -2879,7 +2965,7 @@ function renderCourtsList(isToday) {
     }).join('');
     return `
       <div class="court-row">
-        <div class="court-row-name"><span class="court-type-tag ${c.type.toLowerCase()}">${c.type}</span>${c.label}</div>
+        <div class="court-row-name"><span class="court-type-tag ${c.type.toLowerCase()}">${c.type}</span><i class="fas fa-futbol court-ico"></i>${c.label}</div>
         <div class="court-row-count">${booked.length}/${TIME_SLOTS.length}</div>
         <div class="court-timeline">${cells}</div>
       </div>`;
@@ -3089,16 +3175,75 @@ function updateClockSub() {
 
 
 
-// ── Tema claro / oscuro ──
-function applyThemeIcon() {
-  const icon = document.querySelector('#theme-btn i');
-  if (icon) icon.className = document.documentElement.getAttribute('data-theme') === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+// ── Tema claro / oscuro / automático ──
+const THEMES = [
+  { id: 'light', label: 'Claro',      icon: 'fa-sun' },
+  { id: 'dark',  label: 'Oscuro',     icon: 'fa-moon' },
+  { id: 'auto',  label: 'Automático', icon: 'fa-circle-half-stroke' },
+];
+function getThemeMode() {
+  try { return localStorage.getItem('theme') || 'light'; } catch (e) { return 'light'; }
 }
-function toggleTheme() {
-  const dark = document.documentElement.getAttribute('data-theme') !== 'dark';
+function applyTheme() {
+  const mode = getThemeMode();
+  const dark = mode === 'dark' || (mode === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   if (dark) document.documentElement.setAttribute('data-theme', 'dark');
   else document.documentElement.removeAttribute('data-theme');
-  try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) {}
-  applyThemeIcon();
 }
-document.addEventListener('DOMContentLoaded', applyThemeIcon);
+function setTheme(mode) {
+  try { localStorage.setItem('theme', mode); } catch (e) {}
+  applyTheme();
+  if (currentView === 'config') renderConfig();
+}
+document.addEventListener('DOMContentLoaded', applyTheme);
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (getThemeMode() === 'auto') applyTheme(); });
+
+// ===== CONFIGURACIÓN =====
+function renderConfig() {
+  const wrap = document.getElementById('config-wrap');
+  if (!wrap) return;
+  const p = SheetsAPI.getProfile();
+  const nombre = p.nombre || p.email.split('@')[0] || 'Usuario';
+  const mode = getThemeMode();
+  wrap.innerHTML = `
+    <div class="monthly-table-card" style="margin-top:0">
+      <div class="monthly-table-header"><i class="fas fa-user"></i><span class="mth-title">Mi cuenta</span></div>
+      <div class="cfg-body">
+        <div class="cfg-account">
+          <div class="sidebar-user-avatar cfg-avatar">${escHtml(nombre.charAt(0).toUpperCase())}</div>
+          <div style="min-width:0">
+            <div class="cfg-name">${escHtml(nombre)}</div>
+            <div class="cfg-sub">${escHtml(p.email)} · ${escHtml(ROL_LABEL[userRol])}</div>
+          </div>
+        </div>
+        <div class="cfg-row">
+          <div><div class="cfg-label">Contraseña</div><div class="cfg-sub">Cambiala si la compartiste o dudás de su seguridad.</div></div>
+          <button class="chip-btn" onclick="openPasswordModal()"><i class="fas fa-key"></i> Cambiar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="monthly-table-card">
+      <div class="monthly-table-header"><i class="fas fa-palette"></i><span class="mth-title">Apariencia</span></div>
+      <div class="cfg-body">
+        <div class="cfg-label">Tema</div>
+        <div class="cfg-themes">
+          ${THEMES.map(t => `
+            <button class="cfg-theme ${mode === t.id ? 'active' : ''}" onclick="setTheme('${t.id}')">
+              <i class="fas ${t.icon}"></i><span>${t.label}</span>
+            </button>`).join('')}
+        </div>
+        <div class="cfg-sub" style="margin-top:10px">Se guarda en este dispositivo. «Automático» sigue el modo de tu sistema.</div>
+      </div>
+    </div>
+
+    <div class="monthly-table-card">
+      <div class="monthly-table-header"><i class="fas fa-right-from-bracket"></i><span class="mth-title">Sesión</span></div>
+      <div class="cfg-body">
+        <div class="cfg-row">
+          <div><div class="cfg-label">Cerrar sesión</div><div class="cfg-sub">Salir de este dispositivo.</div></div>
+          <button class="chip-btn danger" onclick="doLogout()"><i class="fas fa-right-from-bracket"></i> Cerrar sesión</button>
+        </div>
+      </div>
+    </div>`;
+}

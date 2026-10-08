@@ -3,42 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Complejo Deportivo — Panel de gestión</title>
-  <link rel="icon" type="image/svg+xml" href="../../public/images/logo.svg">
+  <title>SportIQ Manager — Panel de gestión</title>
+  <link rel="icon" type="image/png" href="../../public/images/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
-  <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
+  <script>try{var t=localStorage.getItem("theme");if(t==="dark"||(t==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 
 <body>
 
 <!-- ════════════════════════ LOGIN ════════════════════════ -->
 <div id="login-screen">
-  <div class="login-card">
-    <div class="login-logo">
-      <img src="../../public/images/logo.svg" alt="Complejo Deportivo">
-      <div class="login-logo-text">
-        Complejo Deportivo
-        <small>Panel de gestión</small>
+
+  <!-- Branding -->
+  <aside class="login-brand" aria-hidden="false">
+    <!-- Cancha de fondo: capa difusa (glow) + capa nítida, ambas muy sutiles -->
+    <svg class="login-pitch" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="lg-grass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffd21c" stop-opacity=".05"/><stop offset="1" stop-color="#ffd21c" stop-opacity="0"/>
+        </linearGradient>
+        <filter id="lg-blur" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="6"/></filter>
+      </defs>
+      <g fill="url(#lg-grass)" stroke="none">
+        <rect x="60" y="60" width="480" height="85"/><rect x="60" y="230" width="480" height="85"/>
+        <rect x="60" y="400" width="480" height="85"/><rect x="60" y="570" width="480" height="85"/>
+      </g>
+      <g id="lg-lines" fill="none" stroke="currentColor" stroke-width="2" filter="url(#lg-blur)" opacity=".9">
+        <rect x="60" y="60" width="480" height="680" rx="4"/>
+        <line x1="60" y1="400" x2="540" y2="400"/>
+        <circle cx="300" cy="400" r="80"/>
+        <rect x="170" y="60" width="260" height="120"/><rect x="230" y="60" width="140" height="48"/>
+        <rect x="170" y="620" width="260" height="120"/><rect x="230" y="692" width="140" height="48"/>
+        <path d="M240 180a60 60 0 0 0 120 0"/><path d="M240 620a60 60 0 0 1 120 0"/>
+      </g>
+      <g fill="none" stroke="currentColor" stroke-width="1.2">
+        <rect x="60" y="60" width="480" height="680" rx="4"/>
+        <line x1="60" y1="400" x2="540" y2="400"/>
+        <circle cx="300" cy="400" r="80"/>
+        <rect x="170" y="60" width="260" height="120"/><rect x="230" y="60" width="140" height="48"/>
+        <rect x="170" y="620" width="260" height="120"/><rect x="230" y="692" width="140" height="48"/>
+        <path d="M240 180a60 60 0 0 0 120 0"/><path d="M240 620a60 60 0 0 1 120 0"/>
+      </g>
+    </svg>
+
+    <!-- Vista previa abstracta del producto (decorativa, sin datos reales) -->
+    <div class="login-preview" aria-hidden="true">
+      <div class="lp-cal">
+        <div class="lp-cal-head"></div>
+        <div class="lp-cal-grid">
+          <i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i>
+          <i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i>
+          <i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i>
+          <i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i>
+        </div>
+      </div>
+      <div class="lp-book lp-book-1"><b></b><span></span><em>19:00</em></div>
+      <div class="lp-book lp-book-2"><b></b><span></span><em>20:30</em></div>
+      <div class="lp-chart"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="lp-slots">
+        <i></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i>
+        <i></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i>
       </div>
     </div>
-    <h1 class="login-title">Iniciar sesión</h1>
-    <p class="login-subtitle">Acceso exclusivo para el personal del complejo.</p>
-    <div class="login-field">
-      <span class="login-label">Email</span>
-      <input type="email" class="login-input" id="login-email" placeholder="" autocomplete="username">
+
+    <div class="login-brand-inner">
+      <div class="login-brand-head">
+        <span class="login-mark"><img src="../../public/images/sportiq-logo-dark.jpg" alt="SportIQ Manager"></span>
+        <div>
+          <div class="login-brand-name">SportIQ Manager</div>
+          <div class="login-brand-tag">Gestión inteligente para complejos deportivos</div>
+        </div>
+      </div>
+
+      <h2 class="login-headline">
+        Gestioná tu complejo.<br>
+        Controlá tus reservas.<br>
+        <span>Tomá mejores decisiones.</span>
+      </h2>
+
+      <ul class="login-stats">
+        <li><span class="ls-ico"><i class="fas fa-calendar-check"></i></span><b>Reservas</b><small>Agenda por cancha y horario</small></li>
+        <li><span class="ls-ico"><i class="fas fa-user-group"></i></span><b>Clientes</b><small>Historial y datos de contacto</small></li>
+        <li><span class="ls-ico"><i class="fas fa-wallet"></i></span><b>Pagos</b><small>Cobros y control de caja</small></li>
+      </ul>
+
+      <div class="login-pitch-copy">
+        <p class="lpc-title">Todo tu complejo, en un solo lugar.</p>
+        <p class="lpc-text">Reservas, clientes, pagos y disponibilidad,<br>desde un único panel.</p>
+      </div>
     </div>
-    <div class="login-field">
-      <span class="login-label">Contraseña</span>
-      <input type="password" class="login-input" id="login-pass" placeholder="" autocomplete="current-password">
+
+    <div class="login-foot">© 2026 SportIQ Manager · Gestión deportiva inteligente</div>
+  </aside>
+
+  <!-- Formulario -->
+  <main class="login-side">
+    <div class="login-form">
+      <div class="login-mobile-logo">
+        <span class="login-mark"><img src="../../public/images/sportiq-logo-dark.jpg" alt="SportIQ Manager"></span>
+        <span class="login-brand-name">SportIQ Manager</span>
+      </div>
+
+      <h1 class="login-title">Bienvenido</h1>
+      <p class="login-lead">Ingresá a tu cuenta</p>
+      <p class="login-subtitle">Accedé al panel de gestión de tu complejo.</p>
+
+      <div class="login-field">
+        <label class="login-label" for="login-email">Email</label>
+        <div class="login-control">
+          <i class="far fa-envelope"></i>
+          <input type="email" class="login-input" id="login-email" placeholder="tu@email.com" autocomplete="username">
+        </div>
+      </div>
+      <div class="login-field">
+        <label class="login-label" for="login-pass">Contraseña</label>
+        <div class="login-control">
+          <i class="fas fa-lock"></i>
+          <input type="password" class="login-input" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="login-eye" id="login-eye" aria-label="Mostrar contraseña"
+            onclick="var p=document.getElementById('login-pass'),s=p.type==='password';p.type=s?'text':'password';this.firstElementChild.className=s?'far fa-eye-slash':'far fa-eye';this.setAttribute('aria-label',s?'Ocultar contraseña':'Mostrar contraseña')">
+            <i class="far fa-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="login-row">
+        <label class="login-check"><input type="checkbox" checked><span></span>Recordarme</label>
+        <button type="button" class="login-link" onclick="showToast('Pedile al jefe del complejo que restablezca tu contraseña.')">¿Olvidaste tu contraseña?</button>
+      </div>
+
+      <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar al panel</button>
+      <div class="login-error" id="login-error">Email o contraseña incorrectos.</div>
+      <p class="login-hint"><i class="fas fa-lock"></i> Acceso exclusivo para personal autorizado</p>
     </div>
-    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar al panel</button>
-    <div class="login-error" id="login-error">Email o contraseña incorrectos.</div>
-    <p class="login-hint"><i class="fas fa-lock" style="font-size:11px"></i> Este panel es de uso exclusivo del personal.</p>
-  </div>
+  </main>
 </div>
 
 <!-- ════════════════════════ APP ════════════════════════ -->
@@ -48,9 +151,9 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-top">
       <div class="sidebar-brand">
-        <img src="../../public/images/logo.svg" alt="Complejo Deportivo">
+        <img src="../../public/images/sportiq-logo-dark.jpg" alt="SportIQ Manager">
         <div class="sidebar-brand-text">
-          Complejo Deportivo
+          SportIQ Manager
           <small>Panel de gestión</small>
         </div>
       </div>
@@ -88,6 +191,9 @@
       </button>
 
       <span class="nav-section-label">General</span>
+      <button class="nav-item" id="nav-config" onclick="setView('config')">
+        <i class="fas fa-gear"></i> Configuración
+      </button>
       <a class="nav-item" href="index.html" target="_blank" style="text-decoration:none">
         <i class="fas fa-globe"></i> Ver sitio público
       </a>
@@ -143,7 +249,6 @@
           <button class="date-nav-btn" onclick="shiftDate(1)" title="Día siguiente"><i class="fas fa-chevron-right"></i></button>
           <button class="date-nav-btn" onclick="goToday()" title="Hoy" style="font-size:12px;font-weight:800;">HOY</button>
         </div>
-        <button class="btn-theme" id="theme-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"><i class="fas fa-moon"></i></button>
         <button class="btn-refresh" onclick="loadMatrix()" id="refresh-btn">
           <i class="fas fa-arrows-rotate"></i> Actualizar
         </button>
@@ -160,7 +265,7 @@
       <section id="home-section">
         <div class="home-head">
           <div>
-            <h1 class="home-title">Dashboard</h1>
+            <h1 class="home-title" id="home-title">Dashboard</h1>
             <p class="home-sub" id="home-sub">Reservas, cobros y ocupación del día, de un vistazo.</p>
           </div>
           <div class="home-head-actions">
@@ -268,6 +373,8 @@
             <div class="legend-item"><div class="legend-dot occupied"></div> Señado</div>
             <div class="legend-item"><div class="legend-dot no-sena"></div> Sin seña</div>
             <div class="legend-item"><div class="legend-dot asistida"></div> Asistida</div>
+            <div class="legend-item"><div class="legend-dot ev-cumple"></div> Cumpleaños</div>
+            <div class="legend-item"><div class="legend-dot ev-evento"></div> Evento</div>
             <div class="legend-item"><div class="legend-dot now"></div> Hora actual</div>
           </div>
         </div>
@@ -322,6 +429,11 @@
         <div class="monthly-content" id="actividad-wrap"></div>
       </div>
 
+      <!-- CONFIGURACIÓN (todos los roles) -->
+      <div id="config-section" style="display:none; width:100%;">
+        <div class="monthly-content" id="config-wrap"></div>
+      </div>
+
       <!-- BUFFET -->
       <div id="buffet-section" style="display:none; width:100%;"></div>
 
@@ -354,11 +466,25 @@
 <!-- —.——.——.——.——.——.——.——.——.——.——.——.——.——.— MODAL NUEVA RESERVA —.——.——.——.——.——.——.——.——.——.——.——.——.——.— -->
 <div class="modal-overlay" id="booking-modal-overlay">
   <div class="modal">
-    <button class="modal-close-btn" onclick="closeNewBookingModal()"><i class="fas fa-times"></i></button>
+    <button class="modal-close-btn" onclick="requestCloseNewBookingModal()"><i class="fas fa-times"></i></button>
     <h2>Nueva reserva</h2>
     <p class="modal-subtitle">Completá los datos para registrar la reserva.</p>
 
     <div class="modal-alert" id="modal-alert"></div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nombre del cliente</label>
+        <div class="autocomplete-wrap">
+          <input type="text" class="form-input" id="m-name" placeholder="Juan García" autocomplete="off">
+          <div class="autocomplete-list" id="ac-list"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">WhatsApp</label>
+        <input type="tel" class="form-input" id="m-phone" placeholder="11 1234-5678">
+      </div>
+    </div>
 
     <div class="form-row">
       <div class="form-group">
@@ -411,23 +537,26 @@
         <option value="5">5 horas</option>
       </select>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Nombre del cliente</label>
-        <div class="autocomplete-wrap">
-          <input type="text" class="form-input" id="m-name" placeholder="Juan García" autocomplete="off">
-          <div class="autocomplete-list" id="ac-list"></div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">WhatsApp</label>
-        <input type="tel" class="form-input" id="m-phone" placeholder="11 1234-5678">
-      </div>
-    </div>
 
     <div class="booking-price-preview" id="price-preview" style="display:none">
       <span class="price-label">Total estimado</span>
       <span id="price-preview-val">—</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label"><i class="fas fa-champagne-glasses"></i> Tipo de reserva</label>
+      <select class="form-select" id="m-evento" onchange="onEventoChange()">
+        <option value="">Reserva común</option>
+        <option value="Cumpleaños">Evento · Cumpleaños</option>
+        <option value="Fiesta">Evento · Fiesta</option>
+        <option value="Torneo">Evento · Torneo</option>
+        <option value="Otro">Evento · Otro</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Precio acordado ($) <span style="font-weight:400;color:var(--text-muted)">· opcional</span></label>
+      <input type="number" class="form-input" id="m-precio" placeholder="Vacío = tarifa normal" min="0" step="500" oninput="updatePricePreview()">
+      <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:12px;line-height:1.4">Para descuentos o precio de evento. Es el total de la reserva.</small>
     </div>
 
     <label class="fijo-toggle">
@@ -464,7 +593,7 @@
     </div>
 
     <div class="modal-actions">
-      <button class="btn-cancel-modal" onclick="closeNewBookingModal()">Cancelar</button>
+      <button class="btn-cancel-modal" onclick="requestCloseNewBookingModal()">Cancelar</button>
       <button class="btn-confirm-booking" id="confirm-booking-btn" onclick="submitNewBooking()">
         <i class="fas fa-circle-check"></i> Confirmar reserva
       </button>
@@ -477,7 +606,7 @@
   <div class="modal detail-modal">
     <div class="detail-hero">
       <button class="detail-close" onclick="closeDetailModal()" aria-label="Cerrar"><i class="fas fa-times"></i></button>
-      <div class="detail-kicker"><i class="fas fa-futbol"></i> Detalle de reserva</div>
+      <div class="detail-kicker"><i class="far fa-calendar"></i> Detalle de reserva</div>
       <div class="detail-court" id="detail-subtitle"></div>
       <div class="detail-when" id="detail-when"></div>
     </div>
@@ -604,6 +733,22 @@
     <div class="booking-price-preview" id="edit-price-preview" style="display:none">
       <span class="price-label">Total estimado</span>
       <span id="edit-price-preview-val">—</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label"><i class="fas fa-champagne-glasses"></i> Tipo de reserva</label>
+      <select class="form-select" id="e-evento" onchange="">
+        <option value="">Reserva común</option>
+        <option value="Cumpleaños">Evento · Cumpleaños</option>
+        <option value="Fiesta">Evento · Fiesta</option>
+        <option value="Torneo">Evento · Torneo</option>
+        <option value="Otro">Evento · Otro</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Precio acordado ($) <span style="font-weight:400;color:var(--text-muted)">· opcional</span></label>
+      <input type="number" class="form-input" id="e-precio" placeholder="Vacío = tarifa normal" min="0" step="500" oninput="updateEditPricePreview()">
+      <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:12px;line-height:1.4">Para descuentos o precio de evento. Es el total de la reserva.</small>
     </div>
 
     <div class="sena-section">
@@ -760,6 +905,12 @@
     </div>
 
     <div class="form-group">
+      <label class="form-label">Precio acordado ($) <span style="font-weight:400;color:var(--text-muted)">· opcional</span></label>
+      <input type="number" class="form-input" id="tf-precio" placeholder="Vacío = tarifa normal" min="0" step="500" oninput="updateTfPrice()">
+      <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:12px;line-height:1.4">Para clientes con descuento. Se aplica a cada turno desde la fecha elegida abajo. Vacío = tarifa normal de la cancha.</small>
+    </div>
+
+    <div class="form-group">
       <label class="form-label">Aplicar los cambios desde</label>
       <input type="date" class="form-input" id="tf-desde">
       <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:12px;line-height:1.4">
@@ -801,6 +952,15 @@
 <!-- SIDEBAR BACKDROP (mobile) -->
 <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item active" id="bn-home" onclick="setView('home')"><i class="fas fa-table-cells-large"></i><span>Inicio</span></button>
+  <button class="bn-item" id="bn-dashboard" onclick="setView('dashboard')"><i class="fas fa-futbol"></i><span>Canchas</span></button>
+  <button class="bn-item" id="bn-fijos" onclick="setView('fijos')"><i class="fas fa-repeat"></i><span>Fijos</span></button>
+  <button class="bn-item" id="bn-caja" onclick="setView('caja')"><i class="fas fa-cash-register"></i><span>Caja</span></button>
+  <button class="bn-item" id="bn-mas" onclick="toggleSidebar()"><i class="fas fa-bars"></i><span>Más</span></button>
+</nav>
+
 <!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
 
@@ -808,6 +968,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/supabase-api.js?v=20261005e"></script>
-<script src="js/script.js?v=20261005e"></script>
+<script src="js/ui-controls.js?v=20261008a"></script>
+<script src="js/script.js?v=20261008a"></script>
 </body>
 </html>
