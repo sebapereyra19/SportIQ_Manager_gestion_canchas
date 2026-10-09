@@ -5,3 +5,6 @@ Thumbs.db
 .env
 database/*.sqlite
 database/*.sqlite3
+
+# Config real de Supabase (usar supabase-config.example.js como plantilla)
+app/frontend/js/supabase-config.js
