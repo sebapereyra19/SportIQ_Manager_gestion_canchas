@@ -1,6 +1,6 @@
 -- ════════════════════════════════════════════════════════════════════
 --  INSTALADOR — Sistema de Reservas para Complejos Deportivos
---  Crea la base completa (estado actual = migraciones 001 → 011) en un
+--  Crea la base completa (estado actual = migraciones 001 → 012) en un
 --  proyecto NUEVO de Supabase, vacío. Sin reservas, clientes ni canchas.
 --
 --  Cómo usarlo: proyecto nuevo → SQL Editor → pegar TODO → Run.
@@ -1071,6 +1071,18 @@ begin
 end;
 $$;
 grant execute on function public.editar_turno_fijo(uuid, text, uuid, int, time, int, text, date, date, date, numeric) to authenticated;
+
+-- ══ PERMISOS DE ACCESO A LAS TABLAS ══════════════════════════════════════
+-- Los proyectos nuevos de Supabase ya no dan acceso automático a las tablas
+-- ("Grant API access to new tables automatically" viene apagado). Sin esto
+-- el panel recibe "permission denied". La seguridad la siguen dando las
+-- políticas RLS: solo empleados activos ven y modifican datos.
+grant usage on schema public to authenticated, service_role;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant all on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to authenticated, service_role;
+-- (Las funciones mantienen sus permisos de arriba: id_usuario_por_email
+--  queda solo para service_role a propósito.)
 
 
 commit;
